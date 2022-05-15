@@ -26,15 +26,15 @@ namespace webapi.Controllers
         }
 
         // GET: detalhes-pai/5
-        [HttpGet("detalhes-do-pai/{id:int?}")]
-        public async Task<IActionResult> Details(ObjectId id)
+        [HttpGet("detalhes-do-pai/{id}")]
+        public async Task<IActionResult> Details(string id)
         {
             if (id == null)
             {
                 return StatusCode(404, new { Mensagem = "Pai não foi encontrado!"});
             }
 
-            var pai = await paiMongoRepository.BuscarPorId(id);
+            var pai = await paiMongoRepository.BuscarPorId(ObjectId.Parse(id));
 
             if (pai == null)
             {
@@ -52,51 +52,52 @@ namespace webapi.Controllers
             {
                 if(!(await AlunoServico.ValidarUsuario(pai.AlunoId)))
                     return StatusCode(400, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
-                
+
+                try
+                {
+                    paiMongoRepository.Inserir(pai);
+                }
+                catch
+                {
+                    return StatusCode(404, new { Mensagem = "Houve um erro ao cadastrar o Pai!"});
+                }
                
                 return StatusCode(201, pai);
             }
 
-            return StatusCode(400, new { Mensagem = "O pai passado é inválido!" });
+             return StatusCode(404, new { Mensagem = "Houve um erro ao cadastrar o Pai!"});
         }
 
         // POST: atualizar-dados-pai/5
-        [HttpPut("atualizar-dados-pai/{id:int}")]
-        public async Task<IActionResult> Edit(ObjectId id, Pai pai)
+        [HttpPut("atualizar-dados-pai/{id}")]
+        public async Task<IActionResult> Edit(string id, Pai pai)
         {
             if(!(await AlunoServico.ValidarUsuario(pai.AlunoId)))
                     return StatusCode(400, new { Mensagem = $"Usuário de ID {pai.AlunoId} não é válido ou não existe!"});
 
             try
             {
-                pai.Id = id;
-                paiMongoRepository.Salvar(pai);
+                pai.Id = ObjectId.Parse(id);
+                paiMongoRepository.Atualizar(pai);
             }
-            catch (Exception error)
+            catch
             {
-                if (!await PaiExists(pai.Id))
-                {
-                    return StatusCode(404, new { Mensagem = "Pai para atualizar não foi encontrado!"});
-                }
-                else
-                {
-                    throw error;
-                }
+                return StatusCode(404, new { Mensagem = "Pai para atualizar não foi encontrado!"});
             }
             
             return StatusCode(200, pai);
         }
 
         // POST: remover-pai/5
-        [HttpDelete("remover-pai/{id:int}")]
-        public async Task<IActionResult> Delete(ObjectId id)
+        [HttpDelete("remover-pai/{id}")]
+        public async Task<IActionResult> Delete(string id)
         {
-            var pai = await paiMongoRepository.BuscarPorId(id);
+            var pai = await paiMongoRepository.BuscarPorId(ObjectId.Parse(id));
             
             if(pai == null)
                 return StatusCode(404, new { Mensagem = "Pai não encontrado!"});
 
-            paiMongoRepository.RemoverPorId(id);
+            paiMongoRepository.RemoverPorId(ObjectId.Parse(id));
             return StatusCode(204);
         }
 
