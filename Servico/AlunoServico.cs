@@ -8,15 +8,19 @@ namespace webapi_materiais.Servico
 {
     public class AlunoServico
     {
-        public static async Task<bool> ValidarUsuario(int id)
+        public static async Task<HttpStatusCode> ValidarUsuario(int id)
         {
             using var client = new HttpClient();
-            
-            client.DefaultRequestHeaders.Add("cookie", "some_cookie");
 
-            using var response = await client.GetAsync($"/detalhes-aluno/{id}");
-            
-            return response.IsSuccessStatusCode;
+            try
+            {
+                using var response = await client.GetAsync($"{Program.AlunosAPI}/detalhes-aluno/{id}");
+                return response.StatusCode;    
+            }
+            catch
+            {
+                return  HttpStatusCode.InternalServerError;
+            }
         }
     }
 }

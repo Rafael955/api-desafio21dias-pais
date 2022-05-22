@@ -20,7 +20,7 @@ namespace webapi.Controllers
         }
         // GET: listar-pais-de-alunos
         [HttpGet("listar-pais-de-alunos")]
-        public async Task<IActionResult> Index(int page = 1)
+        public async Task<IActionResult> Index()
         {
             return StatusCode(200, await paiMongoRepository.Todos());
         }
@@ -50,9 +50,14 @@ namespace webapi.Controllers
         {
             if(ModelState.IsValid)
             {
-                if(!(await AlunoServico.ValidarUsuario(pai.AlunoId)))
-                    return StatusCode(400, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
+                var statusCode = await AlunoServico.ValidarUsuario(pai.AlunoId);
 
+                if(statusCode == System.Net.HttpStatusCode.NotFound)
+                    return StatusCode(404, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
+                
+                if(statusCode == System.Net.HttpStatusCode.InternalServerError)
+                 return StatusCode(500, new { Mensagem = $"Erro ao consultar dados do aluno ou serviço indisponível!"});
+                
                 try
                 {
                     paiMongoRepository.Inserir(pai);
@@ -72,9 +77,14 @@ namespace webapi.Controllers
         [HttpPut("atualizar-dados-pai/{id}")]
         public async Task<IActionResult> Edit(string id, Pai pai)
         {
-            if(!(await AlunoServico.ValidarUsuario(pai.AlunoId)))
-                    return StatusCode(400, new { Mensagem = $"Usuário de ID {pai.AlunoId} não é válido ou não existe!"});
+            var statusCode = await AlunoServico.ValidarUsuario(pai.AlunoId);
 
+            if(statusCode == System.Net.HttpStatusCode.NotFound)
+                return StatusCode(404, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
+            
+            if(statusCode == System.Net.HttpStatusCode.InternalServerError)
+                return StatusCode(500, new { Mensagem = $"Erro ao consultar dados do aluno ou serviço indisponível!"});
+            
             try
             {
                 pai.Id = ObjectId.Parse(id);

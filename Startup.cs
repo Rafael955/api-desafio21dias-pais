@@ -21,7 +21,7 @@ namespace webapi
         {
             Program.AlunosAPI = Configuration.GetConnectionString("AlunosApi");
             Program.MongoConn = Configuration.GetConnectionString("DefaultConnection");
-            Program.MongodbName = Configuration["desafio21dias_api_pais"];
+            Program.MongodbName = Configuration["mongoDatabase"];
             
             services.AddControllers();
             services.AddSwaggerGen(c =>
