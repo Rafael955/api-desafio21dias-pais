@@ -28,7 +28,7 @@ namespace webapi_pais.Servico
         }
         public async void Atualizar(Pai pai)
         {
-            await mongoCollection.UpdateOneAsync(x=> x.Id == pai.Id, new ObjectUpdateDefinition<Pai>(pai));
+            await mongoCollection.UpdateOneAsync(x=> x.Codigo == pai.Codigo, new ObjectUpdateDefinition<Pai>(pai));
             // IMongoCollection<Pai> paisDB = mongoDatabase.GetCollection<Pai>("pais").InsertOneAsync(pai);
             // paisDB.InsertOne(pai);
         }
@@ -40,12 +40,12 @@ namespace webapi_pais.Servico
 
         public async Task<Pai> BuscarPorId(ObjectId id)
         {
-            return await mongoCollection.AsQueryable().Where(x => x.Id == id).FirstOrDefaultAsync();
+            return await mongoCollection.AsQueryable().Where(x => x.Codigo == id).FirstOrDefaultAsync();
         }
 
         public async void RemoverPorId(ObjectId id)
         {
-            await mongoCollection.DeleteOneAsync(x => x.Id == id);
+            await mongoCollection.DeleteOneAsync(x => x.Codigo == id);
         }
     }
 }

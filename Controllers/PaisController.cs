@@ -22,7 +22,8 @@ namespace webapi.Controllers
         [HttpGet("listar-pais-de-alunos")]
         public async Task<IActionResult> Index()
         {
-            return StatusCode(200, await paiMongoRepository.Todos());
+            var todos = await paiMongoRepository.Todos();
+            return Ok(todos);
         }
 
         // GET: detalhes-pai/5
@@ -50,16 +51,18 @@ namespace webapi.Controllers
         {
             if(ModelState.IsValid)
             {
-                var statusCode = await AlunoServico.ValidarUsuario(pai.AlunoId);
-
-                if(statusCode == System.Net.HttpStatusCode.NotFound)
-                    return StatusCode(404, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
-                
-                if(statusCode == System.Net.HttpStatusCode.InternalServerError)
-                 return StatusCode(500, new { Mensagem = $"Erro ao consultar dados do aluno ou serviço indisponível!"});
-                
                 try
                 {
+                    var statusCode = await AlunoServico.ValidarUsuario(pai.AlunoId);
+
+                    if(statusCode == System.Net.HttpStatusCode.NotFound)
+                        return StatusCode(404, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
+                    
+                    if(statusCode == System.Net.HttpStatusCode.InternalServerError)
+                        return StatusCode(500, new { Mensagem = $"Erro ao consultar dados do aluno ou serviço indisponível!"});
+
+                    pai.Aluno = await AlunoServico.BuscarPorId(pai.AlunoId);
+                
                     paiMongoRepository.Inserir(pai);
                 }
                 catch
@@ -77,22 +80,31 @@ namespace webapi.Controllers
         [HttpPut("atualizar-dados-pai/{id}")]
         public async Task<IActionResult> Edit(string id, Pai pai)
         {
-            var statusCode = await AlunoServico.ValidarUsuario(pai.AlunoId);
-
-            if(statusCode == System.Net.HttpStatusCode.NotFound)
-                return StatusCode(404, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
-            
-            if(statusCode == System.Net.HttpStatusCode.InternalServerError)
-                return StatusCode(500, new { Mensagem = $"Erro ao consultar dados do aluno ou serviço indisponível!"});
-            
             try
             {
-                pai.Id = ObjectId.Parse(id);
+                var statusCode = await AlunoServico.ValidarUsuario(pai.AlunoId);
+
+                if(statusCode == System.Net.HttpStatusCode.NotFound)
+                    return StatusCode(404, new { Mensagem = $"Usuário aluno de ID {pai.AlunoId} não é válido ou não existe!"});
+                
+                if(statusCode == System.Net.HttpStatusCode.InternalServerError)
+                    return StatusCode(500, new { Mensagem = $"Erro ao consultar dados do aluno ou serviço indisponível!"});
+
+                pai.Aluno = await AlunoServico.BuscarPorId(pai.AlunoId);
+                pai.Id = id;
+                
                 paiMongoRepository.Atualizar(pai);
             }
-            catch
+            catch(Exception ex)
             {
-                return StatusCode(404, new { Mensagem = "Pai para atualizar não foi encontrado!"});
+                if(!(await PaiExists(ObjectId.Parse(id))))
+                {
+                    return StatusCode(404, new { Mensagem = "Pai para atualizar não foi encontrado!"});
+                }
+                else
+                {
+                     return StatusCode(500, new { Mensagem = ex.Message});
+                }
             }
             
             return StatusCode(200, pai);

@@ -25,4 +25,5 @@
 ``` bash
   dotnet add package Swashbuckle.AspNetCore --version 5.6.3
   dotnet add package mongocsharpdriver --version 2.15.0
+  dotnet add package Newtonsoft.Json --version 13.0.1
 ```
